@@ -8,8 +8,7 @@ use crate::public_parameters::disk_cache::public_params_dir;
 
 #[cfg(not(target_arch = "wasm32"))]
 fn home_dir() -> Utf8PathBuf {
-    Utf8PathBuf::from_path_buf(home::home_dir().expect("missing home directory"))
-        .expect("path contains invalid Unicode")
+    Utf8PathBuf::default()
 }
 
 #[cfg(not(target_arch = "wasm32"))]

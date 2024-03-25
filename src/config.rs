@@ -107,8 +107,7 @@ pub fn public_params_default_dir() -> Utf8PathBuf {
 /// Returns the home directory used by `cargo`` and `rustup`
 #[cfg(not(target_arch = "wasm32"))]
 pub fn home_dir() -> Utf8PathBuf {
-    Utf8PathBuf::from_path_buf(home::home_dir().expect("missing home directory"))
-        .expect("path contains invalid Unicode")
+    Utf8PathBuf::default()
 }
 
 /// Performance-related configuration settings

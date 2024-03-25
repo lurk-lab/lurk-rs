@@ -81,7 +81,7 @@ rand = "0.8.5"
 #    "derive",
 #    "with-file-history",
 #], default-features = false }
-home = "0.5.5"
+# home = "0.5.5"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
@@ -111,7 +111,7 @@ flamegraph = ["pprof/flamegraph", "pprof/criterion"]
 
 [workspace]
 resolver = "2"
-members = ["foil", "lurk-macros", "lurk-metrics", "chain-server"]
+members = ["foil", "lurk-macros", "lurk-metrics"]
 
 # Dependencies that should be kept in sync through the whole workspace
 [workspace.dependencies]
