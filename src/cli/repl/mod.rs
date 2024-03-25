@@ -4,13 +4,6 @@ use abomonation::Abomonation;
 use anyhow::{anyhow, bail, Result};
 use camino::{Utf8Path, Utf8PathBuf};
 use ff::PrimeField;
-use rustyline::{
-    error::ReadlineError,
-    history::DefaultHistory,
-    validate::{MatchingBracketValidator, ValidationContext, ValidationResult, Validator},
-    Config, Editor,
-};
-use rustyline_derive::{Completer, Helper, Highlighter, Hinter};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     cell::OnceCell,
@@ -61,17 +54,6 @@ use super::{
 };
 
 use meta_cmd::MetaCmd;
-
-#[derive(Completer, Helper, Highlighter, Hinter)]
-struct InputValidator {
-    brackets: MatchingBracketValidator,
-}
-
-impl Validator for InputValidator {
-    fn validate(&self, ctx: &mut ValidationContext<'_>) -> rustyline::Result<ValidationResult> {
-        self.brackets.validate(ctx)
-    }
-}
 
 #[allow(dead_code)]
 struct Evaluation {
@@ -686,51 +668,7 @@ where
     pub(crate) fn start(&mut self) -> Result<()> {
         println!("Lurk REPL welcomes you.");
 
-        let mut editor: Editor<InputValidator, DefaultHistory> = Editor::with_config(
-            Config::builder()
-                .color_mode(rustyline::ColorMode::Enabled)
-                .auto_add_history(true)
-                .build(),
-        )?;
-
-        editor.set_helper(Some(InputValidator {
-            brackets: MatchingBracketValidator::new(),
-        }));
-
-        let history_path = &repl_history();
-
-        if history_path.exists() {
-            editor.load_history(history_path)?;
-        }
-
-        loop {
-            match editor.readline(&self.input_marker()) {
-                Ok(line) => {
-                    editor.save_history(history_path)?;
-                    match self.store.read_maybe_meta(self.state.clone(), &line) {
-                        Ok((.., expr_ptr, is_meta)) => {
-                            if is_meta {
-                                if let Err(e) = self.handle_meta(expr_ptr, &self.pwd_path.clone()) {
-                                    eprintln!("!Error: {e}")
-                                }
-                            } else if let Err(e) = self.handle_non_meta(expr_ptr) {
-                                eprintln!("Error: {e}")
-                            }
-                        }
-                        Err(parser::Error::NoInput) => (),
-                        Err(e) => eprintln!("Read error: {e}"),
-                    }
-                }
-                Err(ReadlineError::Interrupted | ReadlineError::Eof) => {
-                    println!("Exiting...");
-                    break;
-                }
-                Err(e) => {
-                    eprintln!("Read line error: {e}");
-                    break;
-                }
-            }
-        }
+        let _history_path = &repl_history();
         Ok(())
     }
 }

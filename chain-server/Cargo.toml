@@ -12,10 +12,6 @@ rust-version.workspace = true
 name = "server"
 path = "src/server.rs"
 
-[[bin]]
-name = "client"
-path = "src/client.rs"
-
 [dependencies]
 abomonation = { workspace = true }
 anyhow = { workspace = true }
@@ -27,7 +23,7 @@ halo2curves = { version = "0.6.0", features = ["bits", "derive_serde"] }
 nova = { workspace = true }
 once_cell = {workspace = true }
 prost = "0.12"
-rustyline = "14.0"
+# rustyline = "14.0"
 serde = { workspace = true }
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 tonic = "0.11"

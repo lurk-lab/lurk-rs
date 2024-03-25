@@ -44,7 +44,7 @@ rand = { workspace = true }
 rand_core = { version = "0.6.4", default-features = false }
 rand_xorshift = "0.3.0"
 rayon = "1.7.0"
-rustyline-derive = "0.10"
+# rustyline-derive = "0.10"
 serde = { workspace = true, features = ["derive"] }
 serde_bytes = "0.11.12"
 serde_json = { workspace = true }
@@ -77,15 +77,15 @@ pprof = { version = "0.13", optional = true} # only used in tests, under feature
 # proptest = { workspace = true }
 # proptest-derive = { workspace = true }
 rand = "0.8.5"
-rustyline = { version = "14.0", features = [
-    "derive",
-    "with-file-history",
-], default-features = false }
+# rustyline = { version = "14.0", features = [
+#    "derive",
+#    "with-file-history",
+#], default-features = false }
 home = "0.5.5"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.2", features = ["js"] }
-rustyline = { version = "14.0", features = ["derive"], default-features = false }
+# rustyline = { version = "14.0", features = ["derive"], default-features = false }
 
 [dev-dependencies]
 # assert_cmd = "2.0.12"
