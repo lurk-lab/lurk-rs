@@ -20,18 +20,19 @@ fn download_circom_binary(_path: impl AsRef<Path>) -> Result<Command> {
 fn download_circom_binary(path: impl AsRef<Path>) -> Result<Command> {
     use std::io::Write;
 
-    let url = match std::env::consts::OS {
-        "linux" => format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-linux-amd64"),
-        "macos" => format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-macos-amd64"),
-        "windows" => {
-            format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-windows-amd64.exe")
-        }
-        os => {
-            bail!("Unsupported OS: {os}. Unable to automatically download the necessary circom binary, please manually download Circom v{CIRCOM_VERSION} to `.lurk/circom/circom`");
-        }
-    };
+    // let url = match std::env::consts::OS {
+    //     "linux" => format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-linux-amd64"),
+    //     "macos" => format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-macos-amd64"),
+    //     "windows" => {
+    //         format!("https://github.com/iden3/circom/releases/download/v{CIRCOM_VERSION}/circom-windows-amd64.exe")
+    //     }
+    //     os => {
+    //         bail!("Unsupported OS: {os}. Unable to automatically download the necessary circom binary, please manually download Circom v{CIRCOM_VERSION} to `.lurk/circom/circom`");
+    //     }
+    // };
 
-    let response = reqwest::blocking::get(url)?.bytes()?;
+    // let response = reqwest::blocking::get(url)?.bytes()?;
+    let response = [];
     let mut out = fs::File::create(path.as_ref())?;
     out.write_all(&response)?;
 

@@ -71,21 +71,21 @@ pub mod non_wasm {
         if gadget.version().is_none() {
             let prelude = error_prelude();
 
-            let response =
-                reqwest::blocking::get(format!("https://github.com/{identifier_as_string}"))
-                    .map_err(|err| CircomCoprocessorError::RemoteCallFailure {
-                        prelude: prelude.clone(),
-                        reference: gadget.reference().clone(),
-                        source: err.into(),
-                    })?;
+            // let response =
+            //     reqwest::blocking::get(format!("https://github.com/{identifier_as_string}"))
+            //         .map_err(|err| CircomCoprocessorError::RemoteCallFailure {
+            //             prelude: prelude.clone(),
+            //             reference: gadget.reference().clone(),
+            //             source: err.into(),
+            //         })?;
 
-            if !response.status().is_success() {
-                return Err(CircomCoprocessorError::GadgetNotFound {
-                    reference: gadget.reference().clone(),
-                    name: String::from(gadget.reference().name()),
-                    prelude,
-                });
-            }
+            // if !response.status().is_success() {
+            //     return Err(CircomCoprocessorError::GadgetNotFound {
+            //         reference: gadget.reference().clone(),
+            //         name: String::from(gadget.reference().name()),
+            //         prelude,
+            //     });
+            // }
 
             return Err(CircomCoprocessorError::MissingGadgetVersion {
                 prelude,
@@ -113,29 +113,30 @@ pub mod non_wasm {
     /// Download a named resource from a given release for a given repository on Github.
     fn get_from_github(
         reference: &CircomGadgetReference,
-        release: &str,
+        _release: &str,
         extension: &str,
     ) -> Result<(), CircomCoprocessorError> {
         let name = reference.name();
-        let identifier = reference.identifier();
+        // let identifier = reference.identifier();
 
-        let asset_url = format!(
-            "https://github.com/{identifier}/releases/download/{release}/{name}.{extension}"
-        );
+        // let asset_url = format!(
+        //     "https://github.com/{identifier}/releases/download/{release}/{name}.{extension}"
+        // );
 
         let path = circom_dir()
             .join(reference.identifier())
             .join(name)
             .with_extension(extension);
 
-        let response = reqwest::blocking::get(format!(
-            "https://github.com/{identifier}/releases/download/{release}/{name}.{extension}"
-        ))
-        .map_err(|err| CircomCoprocessorError::RemoteCallFailure {
-            prelude: error_prelude(),
-            reference: reference.clone(),
-            source: err.into(),
-        })?;
+        // let response = reqwest::blocking::get(format!(
+        //     "https://github.com/{identifier}/releases/download/{release}/{name}.{extension}"
+        // ))
+        // .map_err(|err| CircomCoprocessorError::RemoteCallFailure {
+        //     prelude: error_prelude(),
+        //     reference: reference.clone(),
+        //     source: err.into(),
+        // })?;
+        let response = "".to_string();
 
         let mut out =
             fs::File::create(path).map_err(|err| CircomCoprocessorError::AssetCreationFailure {
@@ -144,15 +145,16 @@ pub mod non_wasm {
                 source: err.into(),
             })?;
 
-        let response_byte =
-            &response
-                .bytes()
-                .map_err(|err| CircomCoprocessorError::PayloadProcessingError {
-                    prelude: error_prelude(),
-                    reference: reference.clone(),
-                    source: err.into(),
-                    asset_url,
-                })?;
+        // let response_byte =
+        //     &response
+        //         .bytes()
+        //         .map_err(|err| CircomCoprocessorError::PayloadProcessingError {
+        //             prelude: error_prelude(),
+        //             reference: reference.clone(),
+        //             source: err.into(),
+        //             asset_url,
+        //         })?;
+        let response_byte = &response.bytes().collect::<Vec<_>>();
 
         out.write_all(response_byte).map_err(|err| {
             CircomCoprocessorError::AssetCreationFailure {
