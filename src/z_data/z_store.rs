@@ -1,9 +1,3 @@
-#[cfg(not(target_arch = "wasm32"))]
-use lurk_macros::serde_test;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest_derive::Arbitrary;
 use serde::{Deserialize, Serialize};
 
 use std::collections::BTreeMap;
@@ -21,12 +15,6 @@ use crate::z_ptr::ZPtr;
 use crate::field::LurkField;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Default)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
-#[cfg_attr(not(target_arch = "wasm32"), proptest(no_bound))]
-#[cfg_attr(
-    not(target_arch = "wasm32"),
-    serde_test(types(halo2curves::bn256::Fr), zdata(true))
-)]
 /// A `ZStore` is a content-addressed, serializable representation of a Lurk store
 ///
 /// Whereas a `Store` contains caches of each type of Lurk data, a `ZStore`

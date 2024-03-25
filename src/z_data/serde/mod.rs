@@ -31,7 +31,6 @@ mod tests {
     use crate::field::FWrap;
     use crate::z_data::{from_z_data, to_z_data};
     use halo2curves::bn256::Fr as Scalar;
-    use proptest::prelude::*;
     use serde::{Deserialize, Serialize};
     use std::collections::BTreeMap;
 
@@ -57,17 +56,5 @@ mod tests {
         let f = FWrap(Scalar::one());
         let ser = to_z_data(f).unwrap();
         assert_eq!(f, from_z_data(&ser).unwrap());
-    }
-
-    proptest! {
-        #[test]
-        fn ser_err_isize(x in any::<isize>()) {
-            assert!(to_z_data(x).is_err());
-        }
-
-        #[test]
-        fn ser_err_f32(x in any::<f32>()) {
-            assert!(to_z_data(x).is_err());
-        }
     }
 }

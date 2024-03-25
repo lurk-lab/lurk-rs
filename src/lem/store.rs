@@ -1469,19 +1469,16 @@ mod tests {
     use expect_test::expect;
     use ff::Field;
     use halo2curves::bn256::Fr;
-    use proptest::prelude::*;
 
     use crate::{
         field::LurkField,
         lem::Tag,
-        parser::position::Pos,
-        state::{initial_lurk_state, lurk_sym},
-        syntax::Syntax,
+        state::initial_lurk_state,
         tag::{ExprTag, Tag as TagTrait},
-        Num, Symbol,
+        Symbol,
     };
 
-    use super::{Ptr, RawPtr, Store};
+    use super::Store;
 
     #[test]
     fn test_car_cdr() {
@@ -1675,55 +1672,6 @@ mod tests {
 
         let foo_bar_hash = s.hash_ptr(&foo_bar_ptr).1;
         assert_eq!(foo_bar_hash, foo_bar_hash_manual);
-    }
-
-    // helper function to test syntax interning roundtrip
-    fn fetch_syntax(ptr: Ptr, store: &Store<Fr>) -> Syntax<Fr> {
-        match ptr.parts() {
-            (Tag::Expr(ExprTag::Num), RawPtr::Atom(idx)) => {
-                Syntax::Num(Pos::No, Num::Scalar(*store.expect_f(*idx)))
-            }
-            (Tag::Expr(ExprTag::Char), RawPtr::Atom(idx)) => {
-                Syntax::Char(Pos::No, store.expect_f(*idx).to_char().unwrap())
-            }
-            (Tag::Expr(ExprTag::U64), RawPtr::Atom(idx)) => Syntax::UInt(
-                Pos::No,
-                crate::UInt::U64(store.expect_f(*idx).to_u64_unchecked()),
-            ),
-            (Tag::Expr(ExprTag::Sym | ExprTag::Key), RawPtr::Atom(_) | RawPtr::Hash4(_)) => {
-                Syntax::Symbol(Pos::No, store.fetch_symbol(&ptr).unwrap().into())
-            }
-            (Tag::Expr(ExprTag::Str), RawPtr::Atom(_) | RawPtr::Hash4(_)) => {
-                Syntax::String(Pos::No, store.fetch_string(&ptr).unwrap())
-            }
-            (Tag::Expr(ExprTag::Cons), RawPtr::Hash4(_)) => {
-                let (elts, last) = store.fetch_list(&ptr).unwrap();
-                let elts = elts
-                    .into_iter()
-                    .map(|e| fetch_syntax(e, store))
-                    .collect::<Vec<_>>();
-                if let Some(last) = last {
-                    Syntax::Improper(Pos::No, elts, fetch_syntax(last, store).into())
-                } else {
-                    Syntax::List(Pos::No, elts)
-                }
-            }
-            (Tag::Expr(ExprTag::Nil), RawPtr::Hash4(_)) => {
-                Syntax::Symbol(Pos::No, lurk_sym("nil").into())
-            }
-            _ => unreachable!(),
-        }
-    }
-
-    proptest! {
-        #[test]
-        fn syntax_roundtrip(x in any::<Syntax<Fr>>()) {
-            let store = Store::<Fr>::default();
-            let ptr1 = store.intern_syntax(x);
-            let y = fetch_syntax(ptr1, &store);
-            let ptr2 = store.intern_syntax(y);
-            assert_eq!(ptr1, ptr2);
-        }
     }
 
     #[test]

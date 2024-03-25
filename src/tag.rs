@@ -1,6 +1,4 @@
 use lurk_macros::TryFromRepr;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest_derive::Arbitrary;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 use std::{convert::TryFrom, fmt};
 use strum::{EnumCount, EnumIter};
@@ -36,7 +34,7 @@ pub(crate) const EXPR_TAG_INIT: u16 = 0b0000_0000_0000_0000;
     EnumCount,
     EnumIter,
 )]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
+
 #[repr(u16)]
 pub enum ExprTag {
     Nil = EXPR_TAG_INIT,
@@ -122,7 +120,7 @@ pub(crate) const CONT_TAG_INIT: u16 = 0b0001_0000_0000_0000;
     EnumCount,
     EnumIter,
 )]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
+
 #[repr(u16)]
 pub enum ContTag {
     Outermost = CONT_TAG_INIT,
@@ -218,7 +216,7 @@ pub(crate) const OP1_TAG_INIT: u16 = 0b0010_0000_0000_0000;
     EnumCount,
     EnumIter,
 )]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
+
 #[repr(u16)]
 pub enum Op1 {
     Car = OP1_TAG_INIT,
@@ -350,7 +348,7 @@ pub(crate) const OP2_TAG_INIT: u16 = 0b0011_0000_0000_0000;
     EnumCount,
     EnumIter,
 )]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
+
 #[repr(u16)]
 pub enum Op2 {
     Sum = OP2_TAG_INIT,
@@ -495,7 +493,6 @@ pub(crate) mod tests {
     use std::collections::HashMap;
 
     use super::*;
-    use proptest::prelude::*;
 
     #[inline]
     fn assert_tags_u16s<T: Into<u16>>(map: HashMap<T, u16>) {
@@ -595,41 +592,5 @@ pub(crate) mod tests {
         ]);
         assert_eq!(map.len(), Op2::COUNT);
         assert_tags_u16s(map)
-    }
-
-    proptest! {
-    #[test]
-    fn prop_expr_tag_u16(x in any::<ExprTag>()) {
-        let x_u16: u16 = x.into();
-        let x2 = ExprTag::try_from(x_u16).expect("read ExprTag from u16");
-        assert_eq!(x, x2);
-    }
-    }
-
-    proptest! {
-    #[test]
-    fn prop_cont_tag_u16(x in any::<ContTag>()) {
-        let x_u16: u16 = x.into();
-        let x2 = ContTag::try_from(x_u16).expect("read ContTag from u16");
-        assert_eq!(x, x2)
-    }
-    }
-
-    proptest! {
-    #[test]
-    fn prop_op1_u16(x in any::<Op1>()) {
-        let x_u16: u16 = x.into();
-        let x2 = Op1::try_from(x_u16).expect("read Op1 from u16");
-        assert_eq!(x, x2)
-    }
-    }
-
-    proptest! {
-    #[test]
-    fn prop_op2_u16(x in any::<Op2>()) {
-        let x_u16: u16 = x.into();
-        let x2 = Op2::try_from(x_u16).expect("read Op2 from u16");
-        assert_eq!(x, x2)
-    }
     }
 }

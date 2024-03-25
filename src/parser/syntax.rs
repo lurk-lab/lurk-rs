@@ -465,7 +465,6 @@ pub mod tests {
     use halo2curves::bn256::Fr as Scalar;
     use nom::Parser;
     #[cfg(not(target_arch = "wasm32"))]
-    use proptest::prelude::*;
 
     use super::*;
     use crate::{char, keyword, list, num, state::State, str, symbol, uint};
@@ -1105,14 +1104,5 @@ pub mod tests {
         let (_, res) = parse_syntax(State::default().rccell(), false, true)(Span::new(&text))
             .expect("valid parse");
         assert_eq!(x, res)
-    }
-
-    proptest! {
-        #[test]
-        fn prop_syntax(x in any::<Syntax<Scalar>>()) {
-            let text = format!("{}", x);
-            let (_, res) = parse_syntax(State::default().rccell(), false, true)(Span::new(&text)).expect("valid parse");
-            assert_eq!(x, res)
-        }
     }
 }

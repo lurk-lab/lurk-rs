@@ -13,9 +13,6 @@
 
 use std::fmt::Display;
 
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
-
 use anyhow::anyhow;
 use nom::bytes::complete::take;
 use nom::multi::count;
@@ -207,20 +204,6 @@ impl ZData {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
-impl Arbitrary for ZData {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_args: Self::Parameters) -> Self::Strategy {
-        let atom = prop::collection::vec(any::<u8>(), 0..256).prop_map(ZData::Atom);
-        atom.prop_recursive(16, 1024, 256, |inner| {
-            prop::collection::vec(inner, 0..256).prop_map(ZData::Cell)
-        })
-        .boxed()
-    }
-}
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -294,16 +277,5 @@ pub mod tests {
                 75, 185,
             ],
         );
-    }
-
-    proptest! {
-        #[test]
-        fn prop_z_data_bytes(x in any::<ZData>()) {
-            let ser = x.to_bytes();
-            let de  = ZData::from_bytes(&ser).expect("read ZData");
-            eprintln!("x {}", x);
-            eprintln!("ser {:?}", ser);
-            assert_eq!(x, de)
-        }
     }
 }

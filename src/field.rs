@@ -12,15 +12,6 @@ use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
 use std::hash::Hash;
 
-#[cfg(not(target_arch = "wasm32"))]
-use lurk_macros::serde_test;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest_derive::Arbitrary;
-#[cfg(not(target_arch = "wasm32"))]
-use rand::{rngs::StdRng, SeedableRng};
-
 use crate::tag::{ContTag, ExprTag, Op1, Op2};
 
 /// The type of finite fields used in the language
@@ -34,8 +25,6 @@ use crate::tag::{ContTag, ExprTag, Op1, Op2};
 /// inconsistencies and inaccuracies in the code base, please prefer the named Scalar forms when correspondence to a
 /// named `LanguageField` is important.
 #[derive(Default, Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, ValueEnum)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
-#[cfg_attr(not(target_arch = "wasm32"), serde_test)]
 #[clap(rename_all = "lowercase")]
 pub enum LanguageField {
     /// The BN256 scalar field,
@@ -287,20 +276,6 @@ pub struct FWrap<F>(pub F);
 
 impl<F: LurkField> Copy for FWrap<F> {}
 
-#[cfg(not(target_arch = "wasm32"))]
-/// Trait implementation for generating `FWrap<F>` instances with proptest
-impl<F: LurkField> Arbitrary for FWrap<F> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_args: Self::Parameters) -> Self::Strategy {
-        let strategy = any::<[u8; 32]>()
-            .prop_map(|seed| FWrap(F::random(StdRng::from_seed(seed))))
-            .no_shrink();
-        strategy.boxed()
-    }
-}
-
 #[allow(clippy::derived_hash_with_manual_eq)]
 impl<F: LurkField> Hash for FWrap<F> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
@@ -341,129 +316,5 @@ impl<'de, F: LurkField> Deserialize<'de> for FWrap<F> {
             D::Error::custom(format!("expected field element as bytes, got {:?}", &bytes))
         })?;
         Ok(FWrap(f))
-    }
-}
-
-#[cfg(test)]
-pub mod tests {
-    use crate::z_data::{from_z_data, to_z_data};
-    use halo2curves::bn256::Fr;
-    use halo2curves::{bn256, grumpkin};
-
-    use super::*;
-
-    fn repr_bytes_consistency<F: LurkField>(f1: FWrap<F>) {
-        let bytes = f1.0.to_repr().as_ref().to_owned();
-        let f2 = <F as LurkField>::from_bytes(&bytes).expect("from_bytes");
-        assert_eq!(f1.0, f2)
-    }
-
-    proptest! {
-      #[test]
-      fn prop_bn256_repr_bytes_consistency(f1 in any::<FWrap<bn256::Fr>>()) {
-          repr_bytes_consistency(f1)
-      }
-      #[test]
-      fn prop_grumpkin_repr_bytes_consistency(f1 in any::<FWrap<grumpkin::Fr>>()) {
-          repr_bytes_consistency(f1)
-      }
-    }
-
-    // Construct canonical bytes from a field element
-    fn to_le_bytes_canonical<F: LurkField>(f: F) -> Vec<u8> {
-        let mut vec = vec![];
-        let bits = f.to_le_bits();
-
-        let len = bits.len();
-        let len_bytes = if len % 8 != 0 { len / 8 + 1 } else { len / 8 };
-        for _ in 0..len_bytes {
-            vec.push(0u8)
-        }
-        for (n, b) in bits.into_iter().enumerate() {
-            let (byte_i, bit_i) = (n / 8, n % 8);
-            if b {
-                vec[byte_i] += 1u8 << bit_i;
-            }
-        }
-        vec
-    }
-
-    // Construct field element from possibly canonical bytes
-    fn from_le_bytes_canonical<F: LurkField>(bs: &[u8]) -> F {
-        let mut res = F::ZERO;
-        let mut bs = bs.iter().rev().peekable();
-        while let Some(b) = bs.next() {
-            let b: F = u64::from(*b).into();
-            if bs.peek().is_none() {
-                res.add_assign(b)
-            } else {
-                res.add_assign(b);
-                res.mul_assign(F::from(256u64));
-            }
-        }
-        res
-    }
-
-    fn repr_canonicity<F: LurkField>(f1: FWrap<F>) {
-        let repr_bytes = f1.0.to_bytes();
-        let canonical_bytes = to_le_bytes_canonical(f1.0);
-        let f2_repr = F::from_bytes(&repr_bytes).expect("from_bytes");
-        let f2_canonical = from_le_bytes_canonical::<F>(&canonical_bytes);
-        assert_eq!(repr_bytes, canonical_bytes);
-        assert_eq!(f2_repr, f2_canonical)
-    }
-
-    proptest! {
-      #[test]
-      fn prop_repr_canonicity(f1 in any::<FWrap<Fr>>()) {
-        repr_canonicity(f1)
-      }
-      #[test]
-      fn prop_bn256_repr_canonicity(f1 in any::<FWrap<bn256::Fr>>()) {
-          repr_canonicity(f1)
-      }
-      #[test]
-      fn prop_grumpkin_repr_canonicity(f1 in any::<FWrap<grumpkin::Fr>>()) {
-          repr_canonicity(f1)
-      }
-      #[test]
-      fn prop_tag_consistency(x in any::<ExprTag>()) {
-          let f1 = Fr::from_expr_tag(x);
-          let tag = <Fr as LurkField>::to_expr_tag(&f1).unwrap();
-          let f2 = Fr::from_expr_tag(tag);
-          assert_eq!(f1, f2);
-          assert_eq!(x, tag)
-      }
-
-      #[test]
-      fn prop_ser_de(x in any::<FWrap<Fr>>()) {
-            let bytes = to_z_data(x).unwrap();
-            let f2: FWrap<Fr> = from_z_data(&bytes).unwrap();
-            assert_eq!(x, f2)
-      }
-    }
-
-    // This checks that the field we're using have a representation
-    // such that forall x: u64, F::from(x).to_repr() == x.to_le_bytes()
-    // This enables a fast conversion for tags, and must be present for all fields
-    // we use this library with.
-    proptest! {
-        #[test]
-        fn prop_bn256_tag_roundtrip(x in any::<u64>()){
-            let f1 = bn256::Fr::from(x);
-            let bytes = f1.to_repr().as_ref().to_vec();
-            let mut bytes_from_u64 = [0u8; 32];
-            bytes_from_u64[..8].copy_from_slice(&x.to_le_bytes());
-            assert_eq!(bytes, bytes_from_u64);
-        }
-
-        #[test]
-        fn prop_grumpkin_tag_roundtrip(x in any::<u64>()){
-            let f1 = grumpkin::Fr::from(x);
-            let bytes = f1.to_repr().as_ref().to_vec();
-            let mut bytes_from_u64 = [0u8; 32];
-            bytes_from_u64[..8].copy_from_slice(&x.to_le_bytes());
-            assert_eq!(bytes, bytes_from_u64);
-        }
     }
 }

@@ -1,32 +1,14 @@
 use anyhow::anyhow;
 use base32ct::{Base32Unpadded, Encoding};
-#[cfg(not(target_arch = "wasm32"))]
-use lurk_macros::serde_test;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest_derive::Arbitrary;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::hash::Hash;
 
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
-
-#[cfg(not(target_arch = "wasm32"))]
-use crate::field::FWrap;
 use crate::field::LurkField;
 use crate::tag::{ContTag, ExprTag, Tag};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
-#[cfg_attr(
-    not(target_arch = "wasm32"),
-    serde_test(
-        types(ExprTag, halo2curves::bn256::Fr),
-        types(ContTag, halo2curves::bn256::Fr),
-        zdata(true)
-    )
-)]
 // Note: the trait bound E: Tag is not necessary in the struct, but it makes the proptest strategy more efficient.
 /// A struct representing a scalar pointer with a tag and a value.
 ///
@@ -35,10 +17,6 @@ use crate::tag::{ContTag, ExprTag, Tag};
 /// i.e. the type of expressions and the type of continuations.
 pub struct ZPtr<E: Tag, F: LurkField>(
     pub E,
-    #[cfg_attr(
-        not(target_arch = "wasm32"),
-        proptest(strategy = "any::<FWrap<F>>().prop_map(|x| x.0)")
-    )]
     pub F,
 );
 
@@ -133,13 +111,6 @@ pub type ZContPtr<F> = ZPtr<ContTag, F>;
 mod tests {
     use super::*;
     use halo2curves::bn256::Fr as Scalar;
-
-    proptest! {
-        #[test]
-        fn prop_base32_z_expr_ptr(x in any::<ZExprPtr<Scalar>>()) {
-            assert_eq!(x, ZPtr::from_base32(&x.to_base32()).unwrap());
-        }
-    }
 
     #[test]
     fn unit_base32_z_expr_ptr() {

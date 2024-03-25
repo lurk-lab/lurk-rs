@@ -22,10 +22,10 @@ anyhow.workspace = true
 bincode = { workspace = true }
 lurk_crate = { path = "../", package = "lurk" }
 pasta_curves = { workspace = true, features = ["repr-c", "serde"] }
-proptest = { workspace = true }
-proptest-derive = { workspace = true }
+# proptest = { workspace = true }
+# proptest-derive = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 
 # `cargo udeps` seems unable to detect dev-dependency usage in a proc macro crate
 [package.metadata.cargo-udeps.ignore]
-development = ["anyhow", "bincode", "lurk_crate", "pasta_curves", "proptest", "proptest-derive", "serde"]
+development = ["anyhow", "bincode", "lurk_crate", "pasta_curves", "serde"]

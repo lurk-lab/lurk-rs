@@ -6,9 +6,6 @@ use crate::package::SymbolRef;
 use crate::parser::position::Pos;
 use crate::uint::UInt;
 
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
-
 /// Lurk's syntax for parsing
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Syntax<F: LurkField> {
@@ -43,36 +40,6 @@ impl<F: LurkField> Syntax<F> {
             | Self::List(pos, _)
             | Self::Improper(pos, ..) => pos,
         }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<Fr: LurkField> Arbitrary for Syntax<Fr> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_args: Self::Parameters) -> Self::Strategy {
-        use crate::Symbol;
-        let leaf = prop_oneof![
-            any::<Num<Fr>>().prop_map(|x| Syntax::Num(Pos::No, x)),
-            any::<UInt>().prop_map(|x| Syntax::UInt(Pos::No, x)),
-            any::<Symbol>().prop_map(|x| Syntax::Symbol(Pos::No, x.into())),
-            any::<String>().prop_map(|x| Syntax::String(Pos::No, x)),
-            any::<char>().prop_map(|x| Syntax::Char(Pos::No, x))
-        ];
-        leaf.prop_recursive(8, 256, 10, |inner| {
-            prop_oneof![
-                inner
-                    .clone()
-                    .prop_map(|x| Syntax::Quote(Pos::No, Box::new(x))),
-                prop::collection::vec(inner.clone(), 0..10).prop_map(|x| Syntax::List(Pos::No, x)),
-                prop::collection::vec(inner, 2..12).prop_map(|mut xs| {
-                    let x = xs.pop().unwrap();
-                    Syntax::Improper(Pos::No, xs, Box::new(x))
-                })
-            ]
-        })
-        .boxed()
     }
 }
 

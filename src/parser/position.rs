@@ -1,6 +1,4 @@
 use crate::parser::Span;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
 
 /// Source code position of an expression in a file
 #[derive(Clone, Copy, Debug)]
@@ -25,16 +23,6 @@ impl PartialEq for Pos {
 }
 
 impl Eq for Pos {}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl Arbitrary for Pos {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_args: Self::Parameters) -> Self::Strategy {
-        any::<()>().prop_map(|_| Pos::No).boxed()
-    }
-}
 
 impl Pos {
     /// Use the range information in a Position to pretty-print that range within

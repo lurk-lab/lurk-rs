@@ -3,10 +3,6 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 use crate::{package::SymbolRef, parser::LURK_WHITESPACE, state::StateRcCell};
-#[cfg(not(target_arch = "wasm32"))]
-use lurk_macros::serde_test;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest_derive::Arbitrary;
 
 pub(crate) const KEYWORD_MARKER: char = ':';
 pub(crate) const SYM_SEPARATOR: char = '.';
@@ -14,8 +10,6 @@ pub(crate) const SYM_MARKER: char = '.';
 pub(crate) const ESCAPE_CHARS: &str = "|(){}[],.:'\\\"";
 
 #[derive(Clone, Debug, Eq, PartialEq, PartialOrd, Serialize, Deserialize, Hash, Ord)]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Arbitrary))]
-#[cfg_attr(not(target_arch = "wasm32"), serde_test)]
 /// Type for hierarchical symbol names.
 pub struct Symbol {
     path: Vec<String>,

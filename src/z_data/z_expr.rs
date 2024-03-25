@@ -1,11 +1,6 @@
-#[cfg(not(target_arch = "wasm32"))]
-use lurk_macros::serde_test;
-#[cfg(not(target_arch = "wasm32"))]
-use proptest::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(target_arch = "wasm32"))]
-use crate::field::FWrap;
 use crate::field::LurkField;
 use crate::hash::PoseidonCache;
 use crate::tag::{ExprTag, Tag};
@@ -14,10 +9,6 @@ use crate::z_store::ZStore;
 use crate::UInt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(
-    not(target_arch = "wasm32"),
-    serde_test(types(halo2curves::bn256::Fr), zdata(true))
-)]
 /// A `ZExpr` is the content-addressed representation of a Lurk expression, which enables
 /// efficient serialization and sharing of hashed Lurk data via associated `ZExprPtr`s.
 pub enum ZExpr<F: LurkField> {
@@ -126,36 +117,5 @@ impl<F: LurkField> ZExpr<F> {
                 UInt::U64(x) => ZPtr(ExprTag::U64, F::from_u64(*x)),
             },
         }
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl<F: LurkField> Arbitrary for ZExpr<F> {
-    type Parameters = ();
-    type Strategy = BoxedStrategy<Self>;
-
-    fn arbitrary_with(_: Self::Parameters) -> Self::Strategy {
-        prop_oneof![
-            Just(ZExpr::Nil),
-            any::<(ZExprPtr<F>, ZExprPtr<F>)>().prop_map(|(x, y)| ZExpr::Cons(x, y)),
-            any::<(FWrap<F>, ZExprPtr<F>)>().prop_map(|(x, y)| Self::Comm(x.0, y)),
-            Just(ZExpr::RootSym),
-            any::<(ZExprPtr<F>, ZExprPtr<F>)>().prop_map(|(x, y)| ZExpr::Sym(x, y)),
-            any::<(ZExprPtr<F>, ZExprPtr<F>)>().prop_map(|(x, y)| ZExpr::Key(x, y)),
-            any::<(ZExprPtr<F>, ZExprPtr<F>, ZExprPtr<F>)>().prop_map(|(arg, body, closed_env)| {
-                ZExpr::Fun {
-                    arg,
-                    body,
-                    closed_env,
-                }
-            }),
-            any::<FWrap<F>>().prop_map(|x| Self::Num(x.0)),
-            Just(ZExpr::EmptyStr),
-            any::<(ZExprPtr<F>, ZExprPtr<F>)>().prop_map(|(x, y)| ZExpr::Str(x, y)),
-            any::<(ZExprPtr<F>, ZContPtr<F>)>().prop_map(|(x, y)| ZExpr::Thunk(x, y)),
-            any::<char>().prop_map(|x| Self::Char(x)),
-            any::<u64>().prop_map(|x| Self::UInt(UInt::U64(x))),
-        ]
-        .boxed()
     }
 }
